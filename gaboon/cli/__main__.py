@@ -1,59 +1,95 @@
 import importlib
 import sys
 from pathlib import Path
+from gaboon.logging import logger, set_log_level
+
 
 import tomllib
-from docopt import docopt
-
-from gaboon.utils.levenshtein import levenshtein_norm
-
-from gaboon.utils.levenshtein import levenshtein_norm
-
-__doc__ = """Usage: gab <command> [<args...>] [options <args>]
-
-Commands:
-    init        Create a new project with starting folders.
-    compile     Compile the contract source files.
-    run         Run a python script with config context.
-    wallet      Manage your wallets.
-    test        Run tests.
-    install     Install a package from GitHub.
-
-Options:
-    -h --help   Show this screen.
-    --version   Show version.
-
-Type `gab <command> --help` for more information on a specific command.
-"""
+from typing import Any, List
+import argparse
+from gaboon.project import Project
 
 GAB_VERSION_STRING = "Gaboon v{}"
 
 
 def main(argv: list) -> int:
-    if "--version" in argv or "-v" in argv:
-        with open("pyproject.toml", "rb") as f:
-            gaboon_data = tomllib.load(f)
-            print(GAB_VERSION_STRING.format(gaboon_data["project"]["version"]))
-            return 0
-    if len(argv) < 1 or argv[0].startswith("-"):
-        docopt(__doc__, ["gab", "-h"])
+    if "--version" in argv or "version" in argv:
+        return get_version()
 
-    cmd = argv[0]
-    # We look at the names of all the files in this folder, each file is a command
-    cmd_list = [i.stem for i in Path(__file__).parent.glob("[!_]*.py")]
-    if cmd not in cmd_list:
-        distances = sorted(
-            [(i, levenshtein_norm(cmd, i)) for i in cmd_list], key=lambda k: k[1]
-        )
-        if distances[0][1] <= 0.2:
-            sys.exit(f"Invalid command. Did you mean 'gab {distances[0][0]}'?")
-        sys.exit("Invalid command. Try 'gab --help' for available commands.")
-    # We then call the `main` function of each command, and pass the args
+    # Main parser
+    parser = argparse.ArgumentParser(
+        prog="Gaboon",
+        description="Pythonic Smart Contract Development Framework",
+        formatter_class=argparse.RawTextHelpFormatter,
+        add_help=True,
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Increase output verbosity (can be used multiple times)",
+    )
+    parser.add_argument(
+        "-q", "--quiet", action="store_true", help="Suppress all output except errors"
+    )
+    sub_parsers = parser.add_subparsers(dest="command")
+
+    # Init command
+    init_sub_parser = sub_parsers.add_parser("init", help="Initialize a new project.")
+    init_sub_parser.add_argument(
+        "path",
+        help="Path of the new project, defaults to current directory.",
+        type=Path,
+        nargs="?",
+        default=Path("."),
+    )
+    init_sub_parser.add_argument(
+        "-f",
+        "--force",
+        required=False,
+        help="Overwrite existing project.",
+        action="store_true",
+    )
+
+    # Compile command
+    sub_parsers.add_parser("compile", help="Compiles the project.")
+
+    if len(argv) < 1 or argv[0].startswith("-h") or argv[0].startswith("--help"):
+        parser.print_help()
+        return 0
+    args = parser.parse_args()
+
+    set_log_level(quiet=args.quiet, verbose=args.verbose)
 
     try:
-        importlib.import_module(f"gaboon.cli.{cmd}").main()
-    except Exception as e:
-        sys.exit(f"Error running command '{cmd}': {e}")
+        project_root: Path = Project.find_project_root()
+
+    except FileNotFoundError:
+        if args.command != "init":
+            logger.error(
+                "Not in a Gaboon project (or any of the parent directories).\nTry to create a gaboon.toml file with `gab init` "
+            )
+            return 1
+        project_root = Path.cwd()
+
+    # Add project_root and config to args
+    args.project_root = project_root
+
+    if args.command:
+        importlib.import_module(f"gaboon.cli.{args.command}").main(args)
+    else:
+        parser.print_help()
+    return 0
+
+
+def get_version() -> int:
+    with open(
+        Path(__file__).resolve().parent.parent.parent.joinpath("pyproject.toml"), "rb"
+    ) as f:
+        gaboon_data = tomllib.load(f)
+        logger.info(GAB_VERSION_STRING.format(gaboon_data["project"]["version"]))
+        return 0
 
 
 if __name__ == "__main__":
