@@ -11,7 +11,7 @@ A fast, pythonic, Vyper smart contract testing and development framework.
 ## MVP requirements
 
 - [x] Initialize a project (`gab init`)
-- [ ] Compile vyper projects (`gab compile`/`gab build`)
+- [x] Compile vyper projects (`gab compile`/`gab build`)
 - [ ] Test vyper projects (`gab test`)
 - [ ] Deploy vyper projects (`gab run <script>`)
 - [ ] Import/generate keystores (`gab wallet import`)
