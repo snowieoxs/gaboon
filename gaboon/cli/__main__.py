@@ -1,11 +1,9 @@
 import importlib
 import sys
 from pathlib import Path
+from typing import Union
 from gaboon.logging import logger, set_log_level
-
-
 import tomllib
-from typing import Any, List
 import argparse
 from gaboon.project import Project
 
@@ -16,35 +14,44 @@ def main(argv: list) -> int:
     if "--version" in argv or "version" in argv:
         return get_version()
 
-    # Main parser
-    parser = argparse.ArgumentParser(
+    main_parser = argparse.ArgumentParser(
         prog="Gaboon",
         description="Pythonic Smart Contract Development Framework",
         formatter_class=argparse.RawTextHelpFormatter,
-        add_help=True,
     )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="Increase output verbosity (can be used multiple times)",
+
+    main_parser.add_argument(
+        "-d", "--debug", action="store_true", help="Run in debug mode"
     )
-    parser.add_argument(
+    main_parser.add_argument(
         "-q", "--quiet", action="store_true", help="Suppress all output except errors"
     )
-    sub_parsers = parser.add_subparsers(dest="command")
+    sub_parsers = main_parser.add_subparsers(dest="command")
 
     # Init command
-    init_sub_parser = sub_parsers.add_parser("init", help="Initialize a new project.")
-    init_sub_parser.add_argument(
+    init_parser = sub_parsers.add_parser(
+        "init",
+        help="Initialize a new project.",
+        description="""
+This will create a basic directory structure at the path you specific, which looks like:
+.
+├── README.md
+├── gaboon.toml
+├── script/
+├── src/
+│   └── Counter.vy
+└── tests/
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    init_parser.add_argument(
         "path",
         help="Path of the new project, defaults to current directory.",
         type=Path,
         nargs="?",
         default=Path("."),
     )
-    init_sub_parser.add_argument(
+    init_parser.add_argument(
         "-f",
         "--force",
         required=False,
@@ -53,18 +60,49 @@ def main(argv: list) -> int:
     )
 
     # Compile command
-    sub_parsers.add_parser("compile", help="Compiles the project.")
+    sub_parsers.add_parser(
+        "compile",
+        help="Compiles the project.",
+        description="""Compiles all Vyper contracts in the project. \n
+This command will:
+1. Find all .vy files in the src/ directory
+2. Compile each file using the Vyper compiler
+3. Output the compiled artifacts to the out/ directory
 
-    if len(argv) < 1 or argv[0].startswith("-h") or argv[0].startswith("--help"):
-        parser.print_help()
+Use this command to prepare your contracts for deployment or testing.""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        aliases=["build"],
+    )
+
+    # Run command
+    run_parser = sub_parsers.add_parser(
+        "run",
+        help="Runs the project.",
+        description="Runs a script with the project's context.",
+    )
+    run_parser.add_argument(
+        "script_name_or_path",
+        help="Name of the script in the script folder, or the path to your script.",
+        type=str,
+        default="./script/deploy.py",
+    )
+    run_parser.add_argument(
+        "--rpc-url",
+        help="RPC of the EVM network you'd like to deploy this code to.",
+        type=str,
+        nargs="?",
+    )
+
+    # Parsing starts
+    if len(argv) == 0 or (len(argv) == 1 and (argv[0] == "-h" or argv[0] == "--help")):
+        main_parser.print_help()
         return 0
-    args = parser.parse_args()
+    args = main_parser.parse_args(argv)
 
-    set_log_level(quiet=args.quiet, verbose=args.verbose)
+    set_log_level(quiet=args.quiet, debug=args.debug)
 
     try:
         project_root: Path = Project.find_project_root()
-
     except FileNotFoundError:
         if args.command != "init":
             logger.error(
@@ -75,11 +113,11 @@ def main(argv: list) -> int:
 
     # Add project_root and config to args
     args.project_root = project_root
-
+    logger.info(f"Running {args.command} command...")
     if args.command:
         importlib.import_module(f"gaboon.cli.{args.command}").main(args)
     else:
-        parser.print_help()
+        main_parser.print_help()
     return 0
 
 

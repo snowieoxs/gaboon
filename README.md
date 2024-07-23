@@ -12,8 +12,8 @@ A fast, pythonic, Vyper smart contract testing and development framework.
 
 - [x] Initialize a project (`gab init`)
 - [x] Compile vyper projects (`gab compile`/`gab build`)
+- [x] Deploy vyper projects (`gab run <script>`)
 - [ ] Test vyper projects (`gab test`)
-- [ ] Deploy vyper projects (`gab run <script>`)
 - [ ] Import/generate keystores (`gab wallet import`)
 - [ ] Install packages `gab install <pypi_project>`
 - [ ] Manage networks `gab networks <add|remove|list>`
@@ -31,6 +31,7 @@ The Gaboon viper (Bitis gabonica), also called the Gaboon adder, is a viper spec
 - [ ] halmos built-in
 - [ ] fuzzing 
 - [ ] `gab console`
+- [ ] Refactor with rust's `PyO3` so it's faster
 
 # Speed Comparisons
 

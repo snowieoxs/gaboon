@@ -10,9 +10,10 @@ from boa import load_partial
 from boa.contracts.vyper.vyper_contract import VyperDeployer
 
 
-def main(args: List[Any]):
+def main(args: List[Any]) -> int:
     my_project: Project = Project(args.project_root)
     compile_project(args.project_root, my_project.out, write_data=True)
+    return 0
 
 
 def compile_project(
@@ -28,7 +29,7 @@ def compile_project(
     logger.info(f"Compiling {len(contracts_to_compile)} contracts to {build_folder}...")
     for contract_path in contracts_to_compile:
         compile(contract_path, build_folder=build_folder, write_data=write_data)
-    logger.info("Done Compiling!")
+    logger.info("Done compiling project!")
     return 0
 
 
@@ -68,7 +69,7 @@ def compile(
         with open(build_file, "w") as f:
             json.dump(build_data, f, indent=4)
         logger.debug(f"Compilation data saved to {build_file}")
-    logger.debug("Done Compiling!")
+    logger.debug("Done compiling {contract_name}")
     return deployer
 
 

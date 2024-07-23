@@ -16,12 +16,10 @@ ch.setFormatter(CustomFormatter())
 logger.addHandler(ch)
 
 
-def set_log_level(quiet=False, verbose=0):
-    if quiet:
-        logger.setLevel(logging.ERROR)
-    elif verbose == 0:
-        logger.setLevel(logging.INFO)
-    elif verbose == 1:
+def set_log_level(quiet=False, debug=False):
+    if debug:
         logger.setLevel(logging.DEBUG)
-    elif verbose >= 2:
-        logger.setLevel(logging.NOTSET)
+    elif not quiet:
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.ERROR)

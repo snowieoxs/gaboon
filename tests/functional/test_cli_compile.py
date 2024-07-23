@@ -1,11 +1,11 @@
 import subprocess
 
-EXPECTED_HELP_TEXT = "Pythonic Smart Contract Development Framework"
+EXPECTED_HELP_TEXT = "Vyper compiler"
 
 
-def test_help():
+def test_compile_help():
     result = subprocess.run(
-        ["gab", "-h"],
+        ["gab", "compile", "-h"],
         check=True,
         capture_output=True,
         text=True,

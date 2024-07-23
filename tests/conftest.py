@@ -1,8 +1,14 @@
 import pytest
 import os
 import shutil
+from gaboon.project.project_class import Project
 
 from .base_test import COUNTER_PROJECT_PATH
+
+
+@pytest.fixture
+def gaboon_project():
+    return Project(COUNTER_PROJECT_PATH)
 
 
 @pytest.fixture

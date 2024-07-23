@@ -175,6 +175,13 @@ cython_debug/
 
 # Ruff / Rye
 .ruff_cache
+
+# Gaboon
+.env
+.env.unsafe
+.env*
+out/
+build/
 """
 
 COUNTER_CONTRACT_PATH = f"{SRC_FOLDER}/Counter.vy"
