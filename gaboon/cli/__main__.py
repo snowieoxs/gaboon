@@ -111,6 +111,10 @@ Use this command to prepare your contracts for deployment or testing.""",
             return 1
         project_root = Path.cwd()
 
+    # Alias overrides
+    if args.command == "build":
+        args.command = "compile"
+
     # Add project_root and config to args
     args.project_root = project_root
     logger.info(f"Running {args.command} command...")
