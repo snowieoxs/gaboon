@@ -1,7 +1,6 @@
 import importlib
 import sys
 from pathlib import Path
-from typing import Union
 from gaboon.logging import logger, set_log_level
 import tomllib
 import argparse
