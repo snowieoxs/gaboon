@@ -16,7 +16,7 @@ def main(argv: list) -> int:
 
     main_parser = argparse.ArgumentParser(
         prog="Gaboon",
-        description="Pythonic Smart Contract Development Framework",
+        description="🐍 Pythonic Smart Contract Development Framework",
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
@@ -77,7 +77,7 @@ Use this command to prepare your contracts for deployment or testing.""",
     # Run command
     run_parser = sub_parsers.add_parser(
         "run",
-        help="Runs the project.",
+        help="Runs a script with the project's context.",
         description="Runs a script with the project's context.",
     )
     run_parser.add_argument(
