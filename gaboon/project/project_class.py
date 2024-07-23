@@ -13,7 +13,7 @@ class Project:
 
     # Constructors
     # ========================================================================
-    def __init__(self, path: Optional[Path] = None):
+    def __init__(self, path: Path | str | None = None):
         self.root: Path = self.find_project_root(path or Path.cwd())
         self.config: GaboonConfig = self._load_config()
 

@@ -1,3 +1,4 @@
+from importlib.machinery import ModuleSpec
 from typing import List, Any
 import sys
 from pathlib import Path
@@ -24,7 +25,15 @@ def run_script(root: Path | str, script_name_or_path: Path | str):
 
     # We give the user's script the module name "deploy_script"
     spec = importlib.util.spec_from_file_location("deploy_script", script_path)
+    if spec is None:
+        logger.error(f"Cannot find module spec for '{script_path}'")
+        sys.exit(1)
+
     module = importlib.util.module_from_spec(spec)
+    if spec.loader is None:
+        logger.error(f"Cannot find loader for '{script_path}'")
+        sys.exit(1)
+
     module.__dict__["boa"] = boa
     spec.loader.exec_module(module)
 
@@ -35,27 +44,18 @@ def run_script(root: Path | str, script_name_or_path: Path | str):
 
 
 def get_script_path(project: Project, script_name_or_path: Path | str) -> Path:
-    script_path = ""
-    if not str(script_name_or_path).endswith(".py"):
-        if project.script in str(script_name_or_path):
-            if project.root in str(script_name_or_path):
-                script_path = Path(f"{script_name_or_path}.py")
-            else:
-                script_name_or_path = project.root / f"{script_name_or_path}.py"
+    script_path = Path(script_name_or_path)
+
+    if script_path.suffix != ".py":
+        script_path = script_path.with_suffix(".py")
+
+    if not script_path.is_absolute():
+        if project.script not in script_path.parts:
+            script_path = project.root / project.script / script_path
         else:
-            script_path = project.root / project.script / f"{script_name_or_path}.py"
-    else:
-        if project.root in str(script_name_or_path):
-            if project.script in str(script_name_or_path):
-                script_path = Path(script_name_or_path)
-            else:
-                logger.error(f"{script_name_or_path} not found")
-        else:
-            if project.script in str(script_name_or_path):
-                script_path = project.root / Path(script_name_or_path)
-            else:
-                script_path = project.root / project.script / Path(script_name_or_path)
+            script_path = project.root / script_path
 
     if not script_path.exists():
         logger.error(f"{script_path} not found")
+
     return script_path
